@@ -1,0 +1,25 @@
+.create-control{position:relative;flex-shrink:0}
+.create-split{display:flex;align-items:stretch;background:var(--navy);border-radius:8px;box-shadow:0 3px 12px #102d3c13;overflow:hidden}
+.create-split .primary{border-radius:0;background:transparent;box-shadow:none!important}
+.create-split .primary:hover:not(:disabled),.create-toggle:hover{background:#ffffff18}
+.create-toggle{display:grid;place-items:center;min-width:35px;min-height:37px;padding:8px 9px;color:white;background:transparent;border-left:1px solid #ffffff30}
+.create-toggle[aria-expanded=true]{background:#ffffff22}
+.create-menu{position:absolute;right:0;top:calc(100% + 10px);z-index:75;width:315px;max-width:calc(100vw - 28px);padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:0 18px 56px #102d3c2c;animation:menu-in .14s ease-out}
+.create-menu::before{content:'';position:absolute;right:16px;top:-6px;width:10px;height:10px;transform:rotate(45deg);background:var(--panel);border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.create-menu button{position:relative;display:flex;align-items:center;gap:12px;text-align:left;width:100%;min-height:64px;background:transparent;border-radius:8px;padding:10px;color:var(--ink)}
+.create-menu button:hover,.create-menu button:focus-visible{background:var(--hover)}
+.create-menu .record-icon{width:38px;height:38px;flex-shrink:0}
+.create-menu .record-icon svg{width:18px;height:18px}
+.create-menu button>span:nth-child(2){flex:1;min-width:0}
+.create-menu strong{display:block;font-size:12px;font-weight:650}
+.create-menu small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.create-menu button>svg:last-child{color:var(--muted)}
+@keyframes menu-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){
+ .create-split .primary{min-height:40px;padding:9px 10px}
+ .create-split .primary span{display:none}
+ .create-toggle{min-height:40px;min-width:31px;padding:7px}
+ .create-menu{width:290px;right:-2px}
+ .create-menu button{min-height:60px}
+}
+@media(prefers-reduced-motion:reduce){.create-menu{animation:none}}

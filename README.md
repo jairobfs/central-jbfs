@@ -2,6 +2,14 @@
 
 Aplicação pessoal unificada · primeira versão · 23/10/2026.
 
+## Versão 1.1 · refinamento de fluxo
+
+- O botão **Novo** mantém a criação contextual de um toque e ganhou seletor de cinco tipos (nota, tarefa, questão, prompt e link).
+- A pesquisa global e os filtros textuais passaram a encontrar também respostas, explicações, alternativas, URLs e fontes, ignorando acentos e diferenças de maiúsculas/minúsculas.
+- A página inicial mostra os **atalhos pessoais** cadastrados como links na Biblioteca, até oito, com favoritos primeiro. Os sete projetos fixos permanecem preservados.
+- Novas interações usam os mesmos registros online e o esquema D1 original, sem migração, importação ou alteração de permissões.
+- Verificações: TypeScript sem erros; 12 testes de integração de API; 9 casos de busca; inspeção visual dos temas claro/escuro e interação com os formulários de questão e link na prévia gerenciada.
+
 Site privado: notas, links, prompts integrais, tarefas por etapa/data, questões de revisão e sessões de foco. A página inicial inclui sete acessos aos projetos existentes, descobertos no estado real da conta em 23/10/2026. O conteúdo desses aplicativos permanece em seus projetos originais.
 
 ## Persistência e contratos

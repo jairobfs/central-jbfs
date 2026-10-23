@@ -1,0 +1,38 @@
+.personal-shortcuts{margin-top:37px}
+.personal-shortcuts-head{margin-bottom:17px}
+.personal-shortcuts-head h2{font-size:20px;letter-spacing:-.5px;font-weight:590;margin-top:5px}
+.personal-shortcuts-empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;display:flex;align-items:center;gap:17px;padding:25px 27px}
+.personal-shortcuts-emblem{display:grid;place-items:center;flex-shrink:0;width:54px;height:54px;border-radius:14px;background:var(--pale);color:var(--teal)}
+.personal-shortcuts-empty>div{flex:1;min-width:0}
+.personal-shortcuts-empty h3{font-weight:620;font-size:14px;margin-bottom:4px}
+.personal-shortcuts-empty p{font-size:12px;color:var(--muted);max-width:550px}
+.personal-links-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.personal-link{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:18px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.personal-link-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.personal-link-icon{display:grid;place-items:center;width:39px;height:39px;border-radius:9px;background:var(--pale);color:var(--teal)}
+.personal-link-kind{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:9px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.personal-link h3{font-size:15px;line-height:1.35;letter-spacing:-.25px;margin:16px 0 7px;overflow-wrap:anywhere}
+.personal-link p{flex:1;font-size:11px;color:var(--muted);line-height:1.6;min-height:44px;max-height:4.8em;overflow:hidden;overflow-wrap:anywhere}
+.personal-link-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}
+.personal-link-actions a{display:flex;align-items:center;gap:7px;min-height:32px;color:var(--teal);font-size:11px;font-weight:600}
+.personal-link-actions a:hover{text-decoration:underline}
+.personal-link-actions button{display:grid;place-items:center;min-width:34px;min-height:34px;color:var(--muted);background:transparent;border-radius:7px}
+.personal-link-actions button:hover{background:var(--hover);color:var(--ink)}
+.personal-shortcuts-note{font-size:10px;color:var(--muted);margin-top:12px}
+@media(max-width:1150px){.personal-links-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ .personal-shortcuts{margin-top:29px}
+ .personal-shortcuts-head h2{font-size:19px}
+ .personal-shortcuts-head .text-button{font-size:10px;gap:5px;white-space:nowrap}
+ .personal-shortcuts-empty{align-items:flex-start;flex-wrap:wrap;padding:18px;gap:12px}
+ .personal-shortcuts-emblem{width:42px;height:42px;border-radius:11px}
+ .personal-shortcuts-empty>div{flex:1 1 calc(100% - 60px)}
+ .personal-shortcuts-empty h3{font-size:12px}
+ .personal-shortcuts-empty p{font-size:11px}
+ .personal-shortcuts-empty .primary{width:100%}
+ .personal-links-grid{gap:10px}
+ .personal-link{padding:14px}
+ .personal-link h3{font-size:14px}
+ .personal-link p{font-size:10px}
+ .personal-link-kind{font-size:8px}
+}
