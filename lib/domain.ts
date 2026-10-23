@@ -11,6 +11,7 @@ export const dataSchema = z.object({
  calendarId:z.enum(['t11','ambulatorio','grupo10','iesc','pessoal']).optional(),
  startTime:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
  endTime:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+ catalogId:z.string().regex(/^[a-z0-9-]{2,120}$/).optional(),
 }).strict();
 export const entryInput=z.object({
  id:z.string().uuid(),kind:kindSchema,title:z.string().trim().min(1,'Dê um título ao registro.').max(200),
