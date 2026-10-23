@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {verifyBackup} from '../scripts/verify-backup.mjs';
+
+const now='2026-10-23T18:00:00.000Z';
+const owner='synthetic-owner';
+const entry={id:randomUUID(),ownerId:owner,kind:'note',title:'Exemplo sintético',body:'linha 1\nlinha 2',tag:'QA',status:'open',data:{favorite:true},revision:3,createdAt:now,updatedAt:now};
+const source={format:'central-jbfs-backup',schemaVersion:1,exportedAt:now,source:'sites-d1',ownerId:owner,recordCount:1,entries:[entry]};
+const ok=verifyBackup(source);
+assert.equal(ok.valid,true);
+assert.equal(ok.count,1);
+assert.equal(ok.sha256.length,64);
+assert.equal(verifyBackup({...source,entries:[{...entry}],recordCount:1}).sha256,ok.sha256);
+const reject=(copy,msg)=>assert.throws(()=>verifyBackup(copy),msg);
+reject({...source,recordCount:2},/Contagem/);
+reject({...source,entries:[entry,entry],recordCount:2},/duplicado/);
+reject({...source,entries:[{...entry,ownerId:'other'}]},/Proprietário/);
+reject({...source,entries:[{...entry,revision:0}]},/Revisão/);
+reject({...source,entries:[{...entry,data:[]}]},/Campos/);
+reject({...source,format:'untrusted'},/Formato/);
+console.log('PASS backup schema, count, duplicate ID, owner isolation, revision, content and format');
