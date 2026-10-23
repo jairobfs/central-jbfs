@@ -1,0 +1,75 @@
+/* Motion language · Central JBFS: subtle depth, clear hierarchy, low distraction. */
+:root{--motion-ease:cubic-bezier(.22,1,.36,1);--motion-speed:560ms}
+@keyframes jbfs-rise{from{opacity:0;transform:translate3d(0,17px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes jbfs-soft-rise{from{opacity:.28;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes jbfs-dialog{from{opacity:0;transform:translate3d(0,15px,0) scale(.97)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+@keyframes jbfs-orbit{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.82}50%{transform:translate(-50%,-50%) scale(1.055);opacity:.48}}
+@keyframes jbfs-float{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes jbfs-spark{0%,100%{opacity:.38;scale:.78}50%{opacity:1;scale:1.18}}
+@keyframes jbfs-center{0%,100%{transform:translate(-50%,-50%) rotate(-9deg) scale(1)}50%{transform:translate(-50%,-52%) rotate(-7deg) scale(1.035)}}
+@keyframes jbfs-sheen{0%{transform:translate3d(-26%,4%,0) rotate(-13deg);opacity:.2}50%{transform:translate3d(14%,-2%,0) rotate(-13deg);opacity:.4}100%{transform:translate3d(-26%,4%,0) rotate(-13deg);opacity:.2}}
+@keyframes jbfs-pulse{0%,100%{box-shadow:0 0 0 0 #0aa5ad24}50%{box-shadow:0 0 0 6px #0aa5ad00}}
+@keyframes jbfs-mark{from{opacity:0;scale:.55;rotate:-15deg}to{opacity:1;scale:1;rotate:0deg}}
+
+/* The selected section remounts as it changes; entrance motion never blocks reading. */
+.page-kicker,.welcome,.view-heading,.app-hero,.runtime-hero,.knowledge-hero,.calendar-hero,.calendar-header,.focus-layout,.app-milestone{animation:jbfs-rise var(--motion-speed) var(--motion-ease) both}
+.welcome{animation-duration:720ms}
+.stats>button,.dashboard-columns>section,.projects-grid>.project-card,.records-grid>.record-card,.app-card-grid>.app-card,.knowledge-notes-grid>.knowledge-note,.runtime-week-grid>.runtime-day,.runtime-exam-list>.runtime-exam,.knowledge-results>button,.knowledge-deck-sidebar>button{animation:jbfs-soft-rise 500ms var(--motion-ease) both}
+.stats>button:nth-child(2),.dashboard-columns>section:nth-child(2),.projects-grid>.project-card:nth-child(2),.records-grid>.record-card:nth-child(2),.app-card-grid>.app-card:nth-child(2){animation-delay:55ms}
+.stats>button:nth-child(3),.projects-grid>.project-card:nth-child(3),.records-grid>.record-card:nth-child(3),.app-card-grid>.app-card:nth-child(3){animation-delay:105ms}
+.stats>button:nth-child(4),.projects-grid>.project-card:nth-child(4),.records-grid>.record-card:nth-child(4),.app-card-grid>.app-card:nth-child(4){animation-delay:155ms}
+.projects-grid>.project-card:nth-child(n+5),.records-grid>.record-card:nth-child(n+5),.app-card-grid>.app-card:nth-child(n+5){animation-delay:170ms}
+.knowledge-reader,.knowledge-flashcard,.runtime-week-view,.runtime-exams,.app-prototype,.app-detail-section,.calendar-month{animation:jbfs-soft-rise 440ms var(--motion-ease) both}
+
+/* Ambient motion stays in decorative artwork, never in editable content. */
+.welcome{isolation:isolate}
+.welcome::before{content:"";position:absolute;inset:-38%;z-index:0;pointer-events:none;background:radial-gradient(ellipse 36% 34% at 66% 44%,#72c4a62c,transparent 76%);animation:jbfs-sheen 15s ease-in-out infinite}
+.welcome-art{z-index:1}
+.welcome-art .orbit{animation:jbfs-orbit 7s ease-in-out infinite}
+.welcome-art .orbit-two{animation-delay:-2.2s;animation-duration:8.5s}
+.welcome-art .orbit-three{animation-delay:-4.1s;animation-duration:11s}
+.welcome-art .orbit-center{animation:jbfs-center 6.5s ease-in-out infinite}
+.welcome-art .orbit-node{animation:jbfs-float 5s ease-in-out infinite}
+.welcome-art .node-two{animation-delay:-1.7s;animation-duration:5.8s}
+.welcome-art .node-three{animation-delay:-3.2s;animation-duration:6.6s}
+.welcome-art .orbit-spark{animation:jbfs-spark 3.6s ease-in-out infinite}
+.welcome-art .orbit-spark.s2{animation-delay:-1.8s}
+.welcome .pill .dot,.runtime-signal,.app-live-dot{animation:jbfs-pulse 2.8s ease-in-out infinite}
+.brand-mark i{animation:jbfs-mark .65s var(--motion-ease) both}
+.brand-mark i:nth-child(2){animation-delay:55ms}.brand-mark i:nth-child(3){animation-delay:110ms}.brand-mark i:nth-child(4){animation-delay:165ms}
+
+/* Interactive feedback works with mouse, keyboard and touch. */
+.main-nav button{position:relative;transition:background-color .24s ease,color .24s ease,translate .24s var(--motion-ease)}
+.main-nav button.active::before{content:"";position:absolute;left:3px;top:calc(50% - 13px);width:3px;height:26px;border-radius:10px;background:var(--teal);animation:jbfs-soft-rise .32s var(--motion-ease) both}
+.motion-toggle.is-on{background:var(--pale);color:var(--teal)}
+.motion-toggle svg{transition:rotate .38s var(--motion-ease),scale .25s var(--motion-ease)}
+.motion-toggle:active svg{rotate:34deg;scale:.88}
+.app-scopes button,.filter-tabs button,.duration-tabs button,.mobile-nav button{transition:background-color .23s ease,color .23s ease,border-color .23s ease,scale .2s ease}
+.primary,.app-runtime-launch,.knowledge-add,.runtime-add,.knowledge-reveal,.calendar-home-strip button{transition:background-color .23s ease,color .23s ease,box-shadow .26s ease,scale .19s ease,translate .26s var(--motion-ease)}
+.primary:active:not(:disabled),.app-runtime-launch:active:not(:disabled),.knowledge-add:active:not(:disabled),.runtime-add:active:not(:disabled),.knowledge-reveal:active:not(:disabled),.mobile-nav button:active,.filter-tabs button:active{scale:.975}
+.record-card,.project-card,.app-card,.knowledge-note,.runtime-study-card,.calendar-home-strip{transition:translate .32s var(--motion-ease),box-shadow .32s ease,border-color .26s ease,background-color .26s ease}
+.record-card:focus-within,.project-card:focus-visible,.app-card:focus-within,.knowledge-note:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px #0aa5ad21}
+.inline-search:focus-within,.app-filter-search:focus-within,.knowledge-search:focus-within,.search-modal-input:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px #0aa5ad20;transition:box-shadow .22s ease,border-color .22s ease}
+.entry-dialog[open],.search-modal,.study-modal,.app-detail{animation:jbfs-dialog 300ms var(--motion-ease) both}
+.toast,.status-banner,.calendar-home-strip,.study-callout{animation:jbfs-soft-rise 380ms var(--motion-ease) both}
+.ring-progress{transition:stroke-dashoffset .85s linear}
+.sidebar,.topbar,.panel,.record-card,.app-card,.knowledge-note,.knowledge-reader,.knowledge-flashcard,.mobile-nav,.entry-dialog{transition:background-color .3s ease,border-color .3s ease,color .3s ease,box-shadow .3s ease}
+
+@media(hover:hover) and (pointer:fine){
+ .main-nav button:hover{translate:3px 0}
+ .project-card:hover,.record-card:hover,.app-card:hover,.knowledge-note:hover{translate:0 -3px;box-shadow:0 11px 30px #0a505013}
+ .stats>button:hover,.knowledge-deck-sidebar>button:hover,.runtime-study-card:hover{translate:0 -2px}
+ .primary:hover:not(:disabled),.knowledge-add:hover:not(:disabled),.runtime-add:hover:not(:disabled),.app-runtime-launch:hover:not(:disabled){translate:0 -1px}
+ .primary:hover:not(:disabled) svg:last-child,.app-runtime-launch:hover svg:last-child,.project-card:hover .project-bottom svg,.calendar-home-strip button:hover svg{translate:3px 0;transition:translate .24s var(--motion-ease)}
+ .motion-toggle:hover svg{rotate:17deg}
+}
+@media(max-width:760px){
+ .welcome::before{animation-duration:18s;opacity:.75}
+ .welcome-art .orbit{animation-duration:12s}
+ .app-card-grid>.app-card,.records-grid>.record-card,.projects-grid>.project-card{animation-duration:390ms}
+ .motion-toggle{min-width:40px;min-height:40px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+[data-motion="off"] *,[data-motion="off"] *::before,[data-motion="off"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
