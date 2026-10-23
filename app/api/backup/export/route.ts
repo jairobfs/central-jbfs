@@ -1,4 +1,4 @@
-import { getChatGPTUser } from '../../chatgpt-auth';
+import { getChatGPTUser } from '../../../chatgpt-auth';
 import { getDb } from '@/db';
 import { entries } from '@/db/schema';
 import { and, eq, gt, asc } from 'drizzle-orm';
