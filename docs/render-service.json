@@ -9,5 +9,14 @@
   "autoDeploy": "yes",
   "buildCommand": "npm install --global pnpm@11.25.0 && pnpm install --frozen-lockfile && npm run build:render",
   "startCommand": "npm run start:render",
-  "envVars": [{"key":"NODE_VERSION","value":"24"}]
+  "envVars": [
+    {
+      "key": "NODE_VERSION",
+      "value": "24"
+    },
+    {
+      "key": "NPM_CONFIG_PREFIX",
+      "value": "/opt/render/project/.npm-global"
+    }
+  ]
 }
