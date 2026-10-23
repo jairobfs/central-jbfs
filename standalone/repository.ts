@@ -1,0 +1,9 @@
+export type QueryDb={query:(sql:string,params?:unknown[])=>Promise<{rows:any[]}>};
+function entry(r:any){return {id:r.id,kind:r.kind,title:r.title,body:r.body,tag:r.tag,status:r.status,data:typeof r.data==='string'?JSON.parse(r.data):r.data,revision:r.revision,createdAt:r.created_at,updatedAt:r.updated_at}}
+export async function initialize(db:QueryDb){await db.query(`CREATE TABLE IF NOT EXISTS central_entries (id TEXT PRIMARY KEY, kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, tag TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`)}
+export function repository(db:QueryDb){return {
+ async list(){const r=await db.query('SELECT * FROM central_entries ORDER BY updated_at DESC LIMIT 1001');return {entries:r.rows.slice(0,1000).map(entry),truncated:r.rows.length>1000}},
+ async create(x:any){const now=new Date().toISOString();await db.query('INSERT INTO central_entries (id,kind,title,body,tag,status,data,revision,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,1,$8,$8) ON CONFLICT (id) DO NOTHING',[x.id,x.kind,x.title,x.body,x.tag,x.status,JSON.stringify(x.data),now]);const r=await db.query('SELECT * FROM central_entries WHERE id=$1',[x.id]);return entry(r.rows[0])},
+ async update(x:any,revision:number){const r=await db.query('UPDATE central_entries SET kind=$2,title=$3,body=$4,tag=$5,status=$6,data=$7,revision=revision+1,updated_at=$8 WHERE id=$1 AND revision=$9 RETURNING *',[x.id,x.kind,x.title,x.body,x.tag,x.status,JSON.stringify(x.data),new Date().toISOString(),revision]);return r.rows[0]?entry(r.rows[0]):null},
+ async remove(id:string,revision:number){const r=await db.query('DELETE FROM central_entries WHERE id=$1 AND revision=$2 RETURNING id',[id,revision]);return !!r.rows.length},
+ }}

@@ -1,0 +1,14 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {requestEntries,EntriesError} from '../lib/entries-client.ts';
+const respond=(body,status=200)=>async()=>Response.json(body,{status});
+test('leitura preserva os registros e exige confirmação do formato',async()=>{assert.deepEqual((await requestEntries('GET',undefined,respond({entries:[]}))).entries,[]);await assert.rejects(requestEntries('GET',undefined,respond({})),/não confirmou/)});
+test('401 preserva o caminho de login fornecido pelo servidor',async()=>{await assert.rejects(requestEntries('POST',{},respond({error:'Entre novamente',signIn:'/signin-with-chatgpt?return_to=%2F'},401)),e=>e instanceof EntriesError&&e.status===401&&e.signIn.startsWith('/signin-with-chatgpt?'))});
+test('não aceita destino externo recebido como login',async()=>{await assert.rejects(requestEntries('GET',undefined,respond({signIn:'https://example.test'},401)),e=>e.signIn==='')});
+test('HTML de erro gera mensagem de recuperação legível',async()=>{await assert.rejects(requestEntries('GET',undefined,async()=>new Response('<html>Erro</html>',{status:503})),/Tente reconectar/)});
+test('HTML no 401 oferece a rota nativa de login',async()=>{await assert.rejects(requestEntries('GET',undefined,async()=>new Response('Login',{status:401})),e=>e.status===401&&e.signIn==='/signin-with-chatgpt?return_to=%2F')});
+test('escrita não confirmada não é reportada como salva',async()=>{await assert.rejects(requestEntries('POST',{},respond({})),/não confirmou/);await assert.rejects(requestEntries('DELETE',{},respond({deleted:false})),/não confirmou/)});
+test('conflito conserva o status e a mensagem para o editor',async()=>{await assert.rejects(requestEntries('PATCH',{},respond({error:'Registro mudou'},409)),e=>e.status===409&&e.message==='Registro mudou')});
+test('escrita envia JSON para o endpoint da mesma origem',async()=>{await requestEntries('PATCH',{id:'fixture'},async(url,init)=>{assert.equal(url,'/api/entries');assert.equal(init.method,'PATCH');assert.equal(init.cache,'no-store');assert.equal(JSON.parse(init.body).id,'fixture');return Response.json({entry:{id:'fixture'}})})});
+test('falha de rede tem mensagem explícita',async()=>{await assert.rejects(requestEntries('GET',undefined,async()=>{throw new TypeError('Failed to fetch')}),/Sem conexão/) });
+test('tempo limite libera a interface e permite reconectar',async()=>{const stalled=async(_,init)=>new Promise((resolve,reject)=>init.signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError'))));await assert.rejects(requestEntries('GET',undefined,stalled,5),/demorou demais/)});

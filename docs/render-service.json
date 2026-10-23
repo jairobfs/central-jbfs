@@ -1,0 +1,13 @@
+{
+  "workspaceId": "tea-db2q1d7lk1mc738b15mg",
+  "name": "central-jbfs",
+  "repo": "https://github.com/jairobfs/central-jbfs",
+  "branch": "main",
+  "runtime": "node",
+  "plan": "free",
+  "region": "virginia",
+  "autoDeploy": "yes",
+  "buildCommand": "npm install --global pnpm@11.25.0 && pnpm install --frozen-lockfile && npm run build:render",
+  "startCommand": "npm run start:render",
+  "envVars": [{"key":"NODE_VERSION","value":"24"}]
+}

@@ -1,0 +1,30 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {DatabaseSync} from 'node:sqlite';
+import fs from 'node:fs';import path from 'node:path';import vm from 'node:vm';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),ts=require('typescript'),root=path.resolve(import.meta.dirname,'..'),cache=new Map();
+function load(file){if(cache.has(file))return cache.get(file).exports;const m={exports:{}};cache.set(file,m);const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;vm.runInThisContext('(function(require,module,exports){'+js+'\n})',{filename:file})(name=>{if(name.startsWith('.')){let f=path.resolve(path.dirname(file),name);if(!f.endsWith('.ts'))f+='.ts';return load(f)}return require(name)},m,m.exports);return m.exports;}
+const {createHandler}=load(path.join(root,'standalone/handler.ts')),{initialize}=load(path.join(root,'standalone/repository.ts')),{passwordHash,sessionToken,validSession}=load(path.join(root,'standalone/security.ts'));
+const sql=new DatabaseSync(':memory:');
+const db={async query(query,values=[]){const args=[];query=query.replace(/\$(\d+)/g,(_,n)=>{args.push(values[Number(n)-1]);return '?'});return {rows:sql.prepare(query).all(...args)}}};
+await initialize(db);
+const secret='test-secret-only-not-production-'.repeat(2),origin='https://central.example.test',hash=passwordHash('123456');
+const handler=createHandler({db,secret,passwordHash:hash,origin,secure:true});let cookie='';
+async function request(method,path,body,authenticated=true,requestOrigin=origin){const res=await handler(new Request(origin+path,{method,headers:{...(authenticated?{cookie}:{}),...(method!=='GET'?{Origin:requestOrigin,'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}));return {status:res.status,data:await res.json()}}
+test('preparação sem banco bloqueia gravação e explica a pendência',async()=>{const h=createHandler({origin});const r=await h(new Request(origin+'/api/entries'));assert.equal(r.status,503);assert.match((await r.json()).error,/banco persistente/) });
+test('saúde informa armazenamento pendente sem expor segredos',async()=>{const r=await createHandler({origin})(new Request(origin+'/health'));assert.deepEqual(await r.json(),{status:'ok',storage:'pending',provider:'render'})});
+test('anônimo não acessa registros',async()=>{const r=await request('GET','/api/entries',null,false);assert.equal(r.status,401);assert.equal(r.data.signIn,'/entrar')});
+test('sessão não aceita adulteração ou expiração',()=>{const token=sessionToken(secret,100);assert.equal(validSession(token,secret,200),true);assert.equal(validSession(token+'a',secret,200),false);assert.equal(validSession(token,secret,8*86400000),false)});
+test('login próprio cria cookie HttpOnly Secure e redireciona',async()=>{const req=new Request(origin+'/api/session',{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded'},body:'password=123456'});const r=await handler(req);assert.equal(r.status,303);const set=r.headers.get('set-cookie');assert.match(set,/HttpOnly/);assert.match(set,/Secure/);cookie=set.split(';')[0]});
+test('login incorreto não emite cookie',async()=>{const r=await handler(new Request(origin+'/api/session',{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded'},body:'password=wrong'}),'test-invalid');assert.equal(r.status,401);assert.equal(r.headers.get('set-cookie'),null)});
+const fixture={id:randomUUID(),kind:'question',title:'Fixture sintética',body:'Linha 1\nLinha 2',tag:'QA',status:'open',data:{options:['A','B'],correctOption:1,answer:'B',explanation:'Texto integral',source:'https://example.test/fonte'}};
+test('criação e leitura nova preservam todas as propriedades',async()=>{const r=await request('POST','/api/entries',fixture);assert.equal(r.status,201);assert.deepEqual(r.data.entry.data,fixture.data);const read=await request('GET','/api/entries');assert.equal(read.data.entries[0].body,fixture.body)});
+test('reenvio do mesmo ID não duplica registro',async()=>{await request('POST','/api/entries',fixture);assert.equal((await request('GET','/api/entries')).data.entries.length,1)});
+test('edição exige revisão atual e conserva o gabarito',async()=>{const r=await request('PATCH','/api/entries',{...fixture,title:'Atualizada',revision:1});assert.equal(r.status,200);assert.equal(r.data.entry.revision,2);assert.equal(r.data.entry.data.correctOption,1);assert.equal((await request('PATCH','/api/entries',{...fixture,revision:1})).status,409)});
+test('origem externa não altera registros',async()=>{assert.equal((await request('PATCH','/api/entries',{...fixture,revision:2},true,'https://other.example.test')).status,403)});
+test('validação científica autoral continua exigindo resposta e gabarito existente',async()=>{assert.equal((await request('POST','/api/entries',{...fixture,id:randomUUID(),data:{options:['A','B'],correctOption:7,answer:'A'}})).status,400)});
+test('exclusão com revisão obsoleta é recusada',async()=>{assert.equal((await request('DELETE','/api/entries',{id:fixture.id,revision:1})).status,409);assert.equal((await request('DELETE','/api/entries',{id:fixture.id,revision:2})).status,200);assert.equal((await request('GET','/api/entries')).data.entries.length,0)});
+test('método desconhecido é recusado',async()=>{assert.equal((await request('PUT','/api/entries',{})).status,405)});
+test('limite de tentativas de login é aplicado',async()=>{let r;for(let i=0;i<6;i++)r=await handler(new Request(origin+'/api/session',{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded'},body:'password=wrong'}),'test-limit');assert.equal(r.status,429)});
+test('logout encerra cookie da sessão',async()=>{const r=await handler(new Request(origin+'/api/session',{method:'DELETE',headers:{Origin:origin,cookie}}));assert.equal(r.status,204);assert.match(r.headers.get('set-cookie'),/Max-Age=0/)});

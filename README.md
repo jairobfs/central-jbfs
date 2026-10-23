@@ -1,6 +1,32 @@
 # Central JBFS
 
-Aplicação pessoal unificada · atualização de calendário · 23/10/2026.
+Aplicação pessoal unificada · simulados e histórico · 23/10/2026.
+
+## Publicação independente em preparação
+
+Execução Node/React/PostgreSQL adicionada para Render, usando os mesmos componentes da versão 12. Configuração, transferência e limites em [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md). Sem banco persistente e acesso configurados, o destino permanece em validação e não grava registros. A origem segue ativa.
+
+## Correção de interação e conexão · 23/10/2026
+
+- Botões de criação em Calendários, apps de agenda, notas, questões, projetos, aulas e fichas da oficina abrem o editor mesmo com a conta desconectada. Controles que gravam dados ou corrigem tentativas continuam exigindo acesso confirmado.
+- Faixa de conexão visível em todas as seções, com reconexão e login nativo quando oferecido pela API. O editor também permite tentar reconectar.
+- Cliente da API com prazo de 15 segundos, mensagens para sessão expirada, resposta HTML, falha de rede e confirmação incompleta. Uma mutação recusada por sessão ou infraestrutura atualiza o estado global de conexão. Nenhuma operação é reportada como salva sem confirmação.
+- Ao usar “Preservar rascunho e entrar”, o rascunho e a revisão original são guardados em sessionStorage nesta aba e recuperados após o acesso, com validade de 1 hora. O item temporário é removido ao recuperar. Isto não é backup nem salvamento online.
+- Publicação atual continua em ChatGPT Sites, autenticação ChatGPT e D1. GitHub jairobfs/central-jbfs existe, mas seu README consultado ainda descreve uma versão anterior. Nenhum serviço Central JBFS foi encontrado no Render/My Workspace nesta checagem. Não foi concluída migração independente.
+- Validação: 10 testes do cliente de conexão, 18 testes dos handlers, TypeScript e build. A prévia gerenciada recusou conexão do navegador; não foi possível homologar cliques, retorno do login ou gravação autenticada em produção. Logs 401/404 encontrados vieram de chamadas do crawler, portanto não comprovam a causa exata da sessão do usuário.
+
+## Atualização · Simulados operacionais
+
+O template `quiz-maker` ganhou um aplicativo próprio e saiu dos candidatos genéricos: agora são 12 apps em uso e 476 candidatos, preservando os 488 registros do censo.
+
+- Seleção de questões por contexto e pesquisa integral, quantidade até 50 e ordem opcionalmente misturada.
+- Gabarito por alternativa definido explicitamente no editor; respostas em texto não são inferidas como uma opção correta. Questões antigas permanecem intactas e entram no simulado depois de receberem esse gabarito.
+- Correção da alternativa escolhida, resposta integral, explicação e referência; o próximo item só é liberado após confirmação de salvamento.
+- Tentativas online no mesmo registro de questão; até 50 recentes por questão e contadores acumulados. IDs estáveis evitam duplicar uma tentativa em uma confirmação repetida. Um detector de mudança sinaliza conteúdo alterado desde a tentativa, sem reclassificar o resultado antigo.
+- Estado de erro mantém a resposta em tela. Se a questão muda durante a tentativa, a gravação é bloqueada até que ela seja reaberta. O resumo da sessão aberta é transitório; as tentativas confirmadas ficam persistidas e reaparecem no histórico após recarregar.
+- Campos opcionais novos no JSON existente; sem migração ou alteração de permissões. Sem importação automática de conteúdo médico ou conexão nova com Craft.
+
+Validação: 19 testes da lógica de simulados e 18 casos de integração dos handlers com Drizzle sobre SQLite de teste, além dos testes existentes e TypeScript. A prévia gerenciada não pôde ser inspecionada nesta atualização: o navegador retornou conexão recusada, mesmo após reinício do supervisor. As páginas temporárias de teste foram removidas. Essas execuções não equivalem a inspeção visual ou login/gravação autenticados na hospedagem. O gabarito é autoral; o aplicativo não atesta correção científica dos conteúdos cadastrados.
 
 ## Versão 1.2 · calendários acadêmicos
 
