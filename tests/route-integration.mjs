@@ -16,6 +16,7 @@ function load(file){if(cache.has(file))return cache.get(file).exports;const m={e
 const customRequire=name=>{if(name.endsWith('chatgpt-auth'))return {getChatGPTUser:async()=>actor,chatGPTSignInPath:()=>'/signin-with-chatgpt?return_to=%2F'};if(name==='cloudflare:workers')return {env:{DB:dbAdapter}};if(name.startsWith('@/')||name.startsWith('.')){let target=path.resolve(name.startsWith('@/')?root:path.dirname(file),name.startsWith('@/')?name.slice(2):name);if(fs.existsSync(target+'.ts'))target+='.ts';else if(fs.existsSync(target+'/index.ts'))target+='/index.ts';return load(target)}return require(name)};
 vm.runInThisContext('(function(require,module,exports){'+js+'\n})',{filename:file})(customRequire,m,m.exports);return m.exports;}
 const routes=load(path.join(root,'app/api/entries/route.ts'));
+const backup=load(path.join(root,'app/api/backup/export/route.ts'));
 const base='http://127.0.0.1:4173';
 const owner='qa-central-'+randomUUID(),other='qa-other-'+randomUUID();
 const checks=[];
@@ -36,5 +37,28 @@ const note={id:randomUUID(),kind:'prompt',title:'Prompt sintético integral',bod
 await test('Full prompt survives create and a new read',async()=>{assert.equal((await request('POST',note)).status,201);const r=await request('GET');assert.equal(r.body.entries.find(e=>e.id===note.id).body,note.body);assert.equal(r.body.entries.find(e=>e.id===note.id).data.favorite,false)});
 const calendarTask={id:randomUUID(),kind:'task',title:'Prova sintética T11',body:'Sem dados de pacientes',tag:'T11',status:'open',data:{due:'2026-11-06',calendarId:'t11',eventType:'exam',startTime:'08:30',endTime:'10:00'}};
 await test('Calendar app type, academic front and time persist in D1',async()=>{const r=await request('POST',calendarTask);assert.equal(r.status,201);assert.deepEqual(r.body.entry.data,calendarTask.data);const fresh=await request('GET');assert.deepEqual(fresh.body.entries.find(x=>x.id===calendarTask.id).data,calendarTask.data)});
+await test('Backup requires identity and same-origin POST',async()=>{
+ actor=null;
+ let r=await backup.POST(new Request(base+'/api/backup/export',{method:'POST',headers:{Origin:base}}));
+ assert.equal(r.status,401);
+ actor={userId:owner,email:'qa@example.test',displayName:'Synthetic QA',fullName:null};
+ r=await backup.POST(new Request(base+'/api/backup/export',{method:'POST',headers:{Origin:'https://example.test'}}));
+ assert.equal(r.status,403);
+});
+await test('Backup exports all owner records, including complete fields and revisions',async()=>{
+ actor={userId:owner,email:'qa@example.test',displayName:'Synthetic QA',fullName:null};
+ let r=await backup.POST(new Request(base+'/api/backup/export',{method:'POST',headers:{Origin:base}}));
+ assert.equal(r.status,200);
+ assert.match(r.headers.get('content-disposition'),/attachment/);
+ assert.equal(r.headers.get('cache-control'),'private, no-store');
+ const data=await r.json();
+ assert.equal(data.format,'central-jbfs-backup');
+ assert.equal(data.recordCount,3);
+ assert.equal(data.entries.find(e=>e.id===q.id).revision,2);
+ assert.deepEqual(data.entries.find(e=>e.id===q.id).data,q.data);
+ actor={userId:other,email:'other@example.test',displayName:'Other',fullName:null};
+ r=await backup.POST(new Request(base+'/api/backup/export',{method:'POST',headers:{Origin:base}}));
+ assert.equal((await r.json()).recordCount,0);
+});
 await test('Only expected revision may delete a record',async()=>{assert.equal((await request('DELETE',{id:q.id,revision:1})).status,409);assert.equal((await request('DELETE',{id:q.id,revision:2})).status,200);assert.equal((await request('DELETE',{id:note.id,revision:1})).status,200);assert.equal((await request('DELETE',{id:calendarTask.id,revision:1})).status,200);assert.equal((await request('GET')).body.entries.length,0)});
 fs.mkdirSync('outputs',{recursive:true});fs.writeFileSync('outputs/route-integration-results.json',JSON.stringify({environment:'Actual route handlers + Drizzle + in-memory SQLite D1 compatibility fixture; identity context mocked',passed:checks.length,checks},null,2));console.log(JSON.stringify({passed:checks.length,total:checks.length}));

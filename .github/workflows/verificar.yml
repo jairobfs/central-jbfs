@@ -43,6 +43,7 @@ jobs:
           node tests/knowledge-runtime.mjs
           node tests/craft-apps.mjs
           node tests/app-runtime.mjs
+          node tests/backup-validation.mjs
 
       - name: Gerar build portável
         run: pnpm build
