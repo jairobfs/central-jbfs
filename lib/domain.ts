@@ -13,6 +13,8 @@ export const dataSchema = z.object({
  endTime:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
  catalogId:z.string().regex(/^[a-z0-9-]{2,120}$/).optional(),
  eventType:z.enum(['class','exam','study','clinical','other']).optional(),
+ habitHistory:z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(3660).optional(),
+ habitWeeklyTarget:z.number().int().min(1).max(7).optional(),
 }).strict();
 export const entryInput=z.object({
  id:z.string().uuid(),kind:kindSchema,title:z.string().trim().min(1,'Dê um título ao registro.').max(200),

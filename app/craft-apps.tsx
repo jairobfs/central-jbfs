@@ -1,28 +1,31 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {ArrowLeft,ArrowRight,ArrowUpRight,BookOpen,CalendarDays,Check,CheckCircle2,ChevronDown,Code2,ExternalLink,Filter,FolderPlus,Grid2X2,Layers,LayoutGrid,List,PanelRightOpen,Plus,Search,SlidersHorizontal,Sparkles,X} from 'lucide-react';
-import type {Entry,Kind} from '@/lib/types';
+import {ArrowLeft,ArrowRight,ArrowUpRight,BookOpen,CalendarDays,Check,CheckCircle2,ChevronDown,Code2,ExternalLink,Filter,FolderPlus,Grid2X2,Layers,LayoutGrid,List,PanelRightOpen,Plus,Search,SlidersHorizontal,Sparkles,Target,Folder,BookMarked,X} from 'lucide-react';
+import type {Draft,Entry,Kind} from '@/lib/types';
 import type {CalendarId} from '@/lib/types';
 import CraftAppRuntime from './craft-app-runtime';
 import CraftKnowledgeRuntime from './craft-knowledge-runtime';
+import CraftExpandedRuntime from './craft-expanded-runtime';
 import {isImplementedApp} from '@/lib/app-runtime';
 import type {EventType,ImplementedApp} from '@/lib/app-runtime';
 import {isKnowledgeApp} from '@/lib/knowledge-runtime';
 import type {KnowledgeApp} from '@/lib/knowledge-runtime';
+import {isExpandedApp} from '@/lib/expanded-apps';
+import type {ExpandedApp} from '@/lib/expanded-apps';
 import './craft-apps.css';
 import './craft-app-live-button.css';
 import './installed-apps.css';
 
 export type CatalogApp={id:string;name:string;c:string[];l:string;s:string;d:string;r:string;f:(string| string[])[][];m:string[];e:number};
 type Catalog={apps:CatalogApp[];categories:Record<string,string>};
-type Props={entries:Entry[];online:boolean;onAttach:(app:CatalogApp,category:string)=>void;onEdit:(entry:Entry)=>void;onStage:(entry:Entry,status:Entry['status'])=>void;onCreateEvent:(date:string,calendarId:CalendarId,type:EventType)=>void;onComplete:(entry:Entry)=>void;onCreateRecord:(kind:Kind)=>void;onFavorite:(entry:Entry)=>void;onReview:(entry:Entry,result:'again'|'good'|'easy')=>Promise<boolean>};
+type Props={entries:Entry[];online:boolean;onAttach:(app:CatalogApp,category:string)=>void;onEdit:(entry:Entry)=>void;onStage:(entry:Entry,status:Entry['status'])=>void;onCreateEvent:(date:string,calendarId:CalendarId,type:EventType)=>void;onComplete:(entry:Entry)=>void;onCreateRecord:(kind:Kind)=>void;onCreatePreset:(kind:Kind,tag:string,title?:string)=>void;onSaveEntry:(draft:Draft,revision?:number)=>Promise<boolean>;onFavorite:(entry:Entry)=>void;onReview:(entry:Entry,result:'again'|'good'|'easy')=>Promise<boolean>};
 type Scope='all'|'mine'|'priority';
 const priorities=['note-taking-app','quick-notes','knowledge-base','project-notes','study-planner','exam-calendar','class-schedule','medical-appointments','flashcard-deck','project-hub','habit-tracker','study-timer','lecture-notes-viewer','health-knowledge','project-dashboard','notes-search'];
 const stageNames:Record<Entry['status'],string>={open:'Anexado',doing:'Em desenvolvimento',done:'Pronto para revisão'};
 const sourceNames:Record<string,string>={collections:'Coleções',tasks:'Tarefas',blocks:'Blocos',upload:'Arquivos',documents:'Documentos',search:'Busca', 'multi-collection':'Múltiplas coleções'};
 const layoutNames:Record<string,string>={timeline:'Linha do tempo',split:'Visão dividida',list:'Lista',cards:'Cartões',table:'Tabela',ledger:'Livro-caixa',inventory:'Inventário',dashboard:'Painel',board:'Quadro',gallery:'Galeria',checklist:'Checklist',feed:'Feed',calendar:'Calendário','page-builder':'Editor de páginas',form:'Formulário',chart:'Gráfico',journal:'Diário',accordion:'Acordeão',timer:'Cronômetro',counter:'Contador',progress:'Progresso',schedule:'Grade horária',directory:'Diretório',map:'Mapa',pipeline:'Etapas','document-viewer':'Leitor de documentos',search:'Pesquisa',routine:'Rotina','multi-view':'Visões combinadas'};
 const norm=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-const isRunnable=(id:string)=>isImplementedApp(id)||isKnowledgeApp(id);
+const isRunnable=(id:string)=>isImplementedApp(id)||isKnowledgeApp(id)||isExpandedApp(id);
 const appIcon=(id:string)=>({
  'class-schedule':CalendarDays,
  'exam-calendar':CheckCircle2,
@@ -32,6 +35,9 @@ const appIcon=(id:string)=>({
  'knowledge-base':BookOpen,
  'flashcard-deck':Grid2X2,
  'notes-search':Search,
+ 'habit-tracker':Target,
+ 'project-hub':Folder,
+ 'lecture-notes-viewer':BookMarked,
 } as Record<string,typeof Layers>)[id]||Layers;
 const installedLabels:Record<string,{name:string,description:string}>={
  'class-schedule':{name:'Grade de aulas',description:'Aulas, atividades e compromissos em uma visão semanal.'},
@@ -42,6 +48,9 @@ const installedLabels:Record<string,{name:string,description:string}>={
  'knowledge-base':{name:'Base de conhecimento',description:'Seu acervo pessoal, pesquisável e organizado.'},
  'flashcard-deck':{name:'Baralho de revisão',description:'Cartões interativos e recuperação ativa.'},
  'notes-search':{name:'Busca de notas',description:'Encontre o que importa em toda a Central.'},
+ 'habit-tracker':{name:'Hábitos',description:'Acompanhe check-ins diários, metas semanais e sequências.'},
+ 'project-hub':{name:'Central de projetos',description:'Reúna tarefas, referências e notas por contexto.'},
+ 'lecture-notes-viewer':{name:'Leitor de aulas',description:'Leia notas completas com sumário e modo de foco.'},
 };
 function url(app:CatalogApp){return `https://www.craft.do/app-templates/${encodeURIComponent(app.id)}`}
 function zip(app:CatalogApp){return `https://www.craft.do/api/app-templates/${encodeURIComponent(app.id)}/download`}
@@ -67,9 +76,9 @@ function Prototype({app}:{app:CatalogApp}){
  </div>;
 }
 
-export default function CraftApps({entries,online,onAttach,onEdit,onStage,onCreateEvent,onComplete,onCreateRecord,onFavorite,onReview}:Props){
+export default function CraftApps({entries,online,onAttach,onEdit,onStage,onCreateEvent,onComplete,onCreateRecord,onCreatePreset,onSaveEntry,onFavorite,onReview}:Props){
  const [catalog,setCatalog]=useState<Catalog|null>(null),[loadError,setLoadError]=useState(''),[search,setSearch]=useState(''),[category,setCategory]=useState(''),[layout,setLayout]=useState(''),[source,setSource]=useState(''),[scope,setScope]=useState<Scope>('priority'),[page,setPage]=useState(1),[selected,setSelected]=useState<CatalogApp|null>(null),[lab,setLab]=useState(false);
- const [running,setRunning]=useState<ImplementedApp|KnowledgeApp|null>(null);
+ const [running,setRunning]=useState<ImplementedApp|KnowledgeApp|ExpandedApp|null>(null);
  useEffect(()=>{const controller=new AbortController();fetch('/craft-488.json',{signal:controller.signal}).then(r=>{if(!r.ok)throw Error('Catálogo indisponível.');return r.json() as Promise<Catalog>}).then(data=>{if(!Array.isArray(data.apps)||data.apps.length!==488)throw Error('O censo não contém os 488 registros esperados.');setCatalog(data)}).catch(e=>{if((e as Error).name!=='AbortError')setLoadError((e as Error).message)});return()=>controller.abort()},[]);
  useEffect(()=>{if(!selected)return;const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setSelected(null)};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[selected]);
  const attached=useMemo(()=>{const map=new Map<string,Entry>();entries.filter(e=>e.data.catalogId).forEach(e=>{if(e.data.catalogId&&!map.has(e.data.catalogId))map.set(e.data.catalogId,e)});return map},[entries]);
@@ -82,8 +91,8 @@ export default function CraftApps({entries,online,onAttach,onEdit,onStage,onCrea
  function changeScope(value:Scope){setScope(value);setPage(1)}
  function resetFilters(){setSearch('');setCategory('');setLayout('');setSource('');setScope('all');setPage(1)}
  function select(a:CatalogApp){setSelected(a);setLab(false)}
- function openApp(id:ImplementedApp|KnowledgeApp){setRunning(id);setSelected(null);window.scrollTo({top:0,behavior:'instant'})}
- if(running)return isImplementedApp(running)?<CraftAppRuntime app={running} entries={entries} online={online} onBack={()=>setRunning(null)} onCreate={onCreateEvent} onEdit={onEdit} onComplete={onComplete}/>:<CraftKnowledgeRuntime app={running} entries={entries} online={online} onBack={()=>setRunning(null)} onCreate={onCreateRecord} onEdit={onEdit} onFavorite={onFavorite} onReview={onReview}/>;
+ function openApp(id:ImplementedApp|KnowledgeApp|ExpandedApp){setRunning(id);setSelected(null);window.scrollTo({top:0,behavior:'instant'})}
+ if(running)return isImplementedApp(running)?<CraftAppRuntime app={running} entries={entries} online={online} onBack={()=>setRunning(null)} onCreate={onCreateEvent} onEdit={onEdit} onComplete={onComplete}/>:isKnowledgeApp(running)?<CraftKnowledgeRuntime app={running} entries={entries} online={online} onBack={()=>setRunning(null)} onCreate={onCreateRecord} onEdit={onEdit} onFavorite={onFavorite} onReview={onReview}/>:<CraftExpandedRuntime app={running} entries={entries} online={online} onBack={()=>setRunning(null)} onEdit={onEdit} onCreatePreset={onCreatePreset} onSaveEntry={onSaveEntry}/>;
  return <div className="craft-apps">
   <div className="app-hero"><div><span className="app-eyebrow">CRAFT × CENTRAL JBFS · OFICINA DE APLICAÇÕES</span><h1>488 ideias.<br/><em>Um universo seu.</em></h1><p>Um acervo auditado que evolui. Os aplicativos efetivados ganham lugar próprio; os demais permanecem disponíveis para seleção, desenvolvimento e validação.</p><div className="app-hero-actions"><button className="app-light-button" onClick={()=>changeScope('priority')}>Explorar candidatos<ArrowRight size={16}/></button><a href="https://docs.google.com/document/d/1n3Y-AE7v_l05b7dUHuy2T1aPgTZOqtWMCtswiZ6FfSA/edit" target="_blank" rel="noopener noreferrer">Consultar acervo original<ArrowUpRight size={15}/></a></div></div><div className="app-hero-index"><span>CATÁLOGO VERIFICADO</span><strong>488<small>/488</small></strong><div><span>29<small>layouts</small></span><span>7<small>fontes de dados</small></span><span>{integrated.length}<small>efetivados</small></span></div></div></div>
   <div className="app-milestone"><CheckCircle2 size={20}/><p><strong>Aplicativos em funcionamento ficam fora da vitrine genérica.</strong> Cada nova implementação validada passa automaticamente para “Apps em uso”. O censo original mantém seus 488 registros e as fichas de desenvolvimento permanecem salvas, sem perder histórico.</p></div>
