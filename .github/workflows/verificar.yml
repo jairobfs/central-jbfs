@@ -2,7 +2,7 @@ name: Verificar Central JBFS
 
 on:
   push:
-    branches: [main]
+    branches: [main, render/canario-readonly]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -47,6 +47,20 @@ jobs:
 
       - name: Gerar build portável
         run: pnpm build
+
+      - name: Conferir prévia estática independente Render
+        if: github.ref == 'refs/heads/render/canario-readonly'
+        run: |
+          pnpm run build:render-preview
+          test -s out/index.html
+
+      - name: Testar a publicação no Render
+        if: github.ref == 'refs/heads/render/canario-readonly'
+        run: |
+          curl --fail --show-error --location --retry 3 --max-time 35 https://central-jbfs-canario.onrender.com/ -o /tmp/central-jbfs-render.html
+          grep -Fq 'PRÉVIA TÉCNICA NO RENDER' /tmp/central-jbfs-render.html
+          curl --fail --show-error --location --retry 3 --max-time 35 https://central-jbfs-canario.onrender.com/craft-488.json -o /tmp/central-jbfs-catalog.json
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('/tmp/central-jbfs-catalog.json','utf8'));if(!c)process.exit(1);console.log('Render catalog available')"
 
       - name: Guardar build verificado para migração independente
         if: github.event_name != 'pull_request'
