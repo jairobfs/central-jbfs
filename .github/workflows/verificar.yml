@@ -1,0 +1,48 @@
+name: Verificar Central JBFS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: central-jbfs-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Código, conteúdo e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obter código canônico
+        uses: actions/checkout@v6
+
+      - name: Preparar Node.js e pnpm do projeto
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      - name: Conferir tipos TypeScript
+        run: pnpm exec tsc --noEmit --incremental false
+
+      - name: Validar APIs, isolamento e persistência simulada
+        run: node tests/route-integration.mjs
+
+      - name: Validar busca, calendário e biblioteca
+        run: |
+          node tests/search.mjs
+          node tests/calendar.mjs
+          node tests/knowledge-runtime.mjs
+          node tests/craft-apps.mjs
+          node tests/app-runtime.mjs
+
+      - name: Gerar build portável
+        run: pnpm build
