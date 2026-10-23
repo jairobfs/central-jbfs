@@ -14,7 +14,10 @@
 - Rejeita chamadas sem identidade e requisições cross-origin.
 - Exporta todos os registros do proprietário por paginação de ID, incluindo `revision`, `createdAt`, `updatedAt`, `kind`, `data` e `ownerId`.
 - Download JSON com `Cache-Control: private, no-store`, sem escrita em GitHub ou Render.
-- Testes sintéticos de autorização, origem, completude e isolamento em `tests/route-integration.mjs`.
+- Interface: botão `Exportar meus dados` na base da barra lateral, acessível apenas quando os registros estão online. O arquivo é validado quanto a formato e contagem antes de iniciar o download.
+- Conferência offline: `node scripts/verify-backup.mjs /caminho/privado/backup.json` gera somente contagem e SHA-256 da lista ordenada, sem imprimir títulos ou conteúdos.
+- A exportação é paginada e não fornece snapshot transacional se houver gravações simultâneas; evitar editar registros durante o backup e comparar com uma segunda exportação antes da migração.
+- Testes sintéticos de autorização, origem, completude e isolamento em `tests/route-integration.mjs` e testes do verificador em `tests/backup-validation.mjs`.
 - **Não ativa importação, sincronização nem migração automática.** Exportação real só poderá ser usada após a publicação dessa rota no ambiente Sites e uma sessão autenticada.
 
 ## Etapa 2 — adaptação em branch isolada (a implementar)
