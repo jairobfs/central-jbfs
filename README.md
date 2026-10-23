@@ -1,6 +1,15 @@
 # Central JBFS
 
-Aplicação pessoal unificada · primeira versão · 23/10/2026.
+Aplicação pessoal unificada · atualização de calendário · 23/10/2026.
+
+## Versão 1.2 · calendários acadêmicos
+
+- Navegação nova **Calendários**, também na barra inferior do iPhone; visão mensal com navegação por mês, seleção de dia e filtros **T11**, **Ambulatório VII**, **Grupo 10/10B**, **IESC/UBS Paulista** e **Pessoal**.
+- Cartões de fontes já localizadas: acervo T11 (calendário de problemas 2025.2 e rodízio de 5º módulo 2025 — ambos marcados históricos), pasta Ambulatório VII 2026 e pasta de materiais IESC Ambulatório. Para Grupo 10, a referência específica atual ainda não foi localizada; a interface deixa explícito que a fonte precisa ser vinculada.
+- Registro de compromissos via tarefa com data, hora inicial/final opcional e frente de calendário. Usa o **mesmo armazenamento D1 por usuário**, sem migração. É possível editar, concluir, consultar eventos futuros e vincular novas fontes por meio dos registros de link existentes.
+- A Central **não consome automaticamente** conteúdo de pastas Drive, PDFs ou Google Agenda. O vínculo de fonte é um atalho editável, não sincronização de eventos. O conector de calendário para Sites não pôde ser declarado, porque a ação de elegibilidade não está exposta nesta sessão.
+- A página inicial ganhou uma entrada para a agenda. Foram mantidos todos os módulos anteriores, incluindo atalhos pessoais, pesquisa e o editor existente.
+- Verificação local: TypeScript, 12 testes de integração da API, 9 casos de busca e 13 verificações de data/categoria; prévia do módulo em temas claro e escuro, filtro Grupo 10 e navegação mensal. Teste real de gravação de eventos na hospedagem autenticada ainda depende de acesso da pessoa à publicação.
 
 ## Versão 1.1 · refinamento de fluxo
 

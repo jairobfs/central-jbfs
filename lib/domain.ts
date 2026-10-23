@@ -8,6 +8,9 @@ export const dataSchema = z.object({
  favorite:z.boolean().optional(), reviewDue:z.string().datetime().optional(),
  reviewCount:z.number().int().min(0).max(100000).optional(), lastResult:z.enum(['again','good','easy']).optional(),
  durationSeconds:z.number().int().min(1).max(86400).optional(), due:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+ calendarId:z.enum(['t11','ambulatorio','grupo10','iesc','pessoal']).optional(),
+ startTime:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+ endTime:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
 }).strict();
 export const entryInput=z.object({
  id:z.string().uuid(),kind:kindSchema,title:z.string().trim().min(1,'Dê um título ao registro.').max(200),

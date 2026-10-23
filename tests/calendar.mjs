@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {addMonths,monthDates,longMonth,calendarForEntry,saoPauloDate} from '../lib/calendar.ts';
+
+const october=monthDates('2026-10');
+assert.equal(october.length,35);
+assert.equal(october.filter(Boolean).length,31);
+assert.equal(october[3],'2026-10-01');
+assert.equal(october[34],null);
+assert.equal(monthDates('2024-02').filter(Boolean).length,29);
+assert.equal(addMonths('2026-12',1),'2027-01');
+assert.equal(addMonths('2026-01',-1),'2025-12');
+assert.match(longMonth('2026-10'),/outubro de 2026/);
+assert.equal(saoPauloDate(new Date('2026-10-23T02:30:00Z')),'2026-10-22');
+const task=(tag,calendarId)=>({kind:'task',tag,data:calendarId?{calendarId}:{},title:'Teste'});
+assert.equal(calendarForEntry(task('Grupo 10')), 'grupo10');
+assert.equal(calendarForEntry(task('Ambulatório')), 'ambulatorio');
+assert.equal(calendarForEntry(task('Estudo','t11')), 't11');
+assert.equal(calendarForEntry(task('IESC')), 'iesc');
+assert.equal(calendarForEntry(task('Pessoal')), 'pessoal');
+console.log('PASS 13 calendar date/category checks');
