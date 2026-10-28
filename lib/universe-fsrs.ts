@@ -5,7 +5,7 @@
  * scheduler FSRS validado. Coleção autoritativa: Craft ⌕ TUT.
  * Nunca insira dados de demonstração na coleção de produção.
  */
-import {normalizeUniverseCraftUrl,UNIVERSE_COLLECTIONS,UNIVERSE_SPACE} from './universe-craft';
+import {normalizeUniverseCraftUrl,UNIVERSE_COLLECTIONS,UNIVERSE_SPACE} from './universe-craft.ts';
 
 export type FsrsRating = 1 | 2 | 3 | 4;
 export type FsrsState = {state:string;due:string;stability:number;difficulty:number;[field:string]:unknown};
@@ -30,7 +30,7 @@ export class CraftReviewError extends Error {
   constructor(code:string,message:string){super(message);this.code=code;this.name='CraftReviewError'}
 }
 type Options={fetchImpl?:typeof fetch;timeoutMs?:number};
-const inflight=new Map<string,Promise<AppendResult>>();
+const inflight=new Map<string,{fingerprint:string;promise:Promise<AppendResult>}>();
 const VALID_ID=/^[A-Za-z0-9_.:-]{1,160}$/;
 const own=(x:object,k:string)=>Object.prototype.hasOwnProperty.call(x,k);
 const isRecord=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&!Array.isArray(x);
@@ -175,9 +175,13 @@ export async function appendUniverseCraftReview(connectionUrl:string,event:FsrsR
   const base=normalizeUniverseCraftUrl(connectionUrl);
   validateReviewEvent(event);
   const key=base+'#'+event.eventId;
+  const fingerprint=eventJSON(event);
   const pending=inflight.get(key);
-  if(pending)return pending;
+  if(pending){
+    if(pending.fingerprint!==fingerprint)throw new CraftReviewError('EVENT_CONFLICT','Outro registro com este EventoID está sendo enviado com conteúdo diferente.');
+    return pending.promise;
+  }
   const promise=doAppend(event,base,options).finally(()=>{inflight.delete(key)});
-  inflight.set(key,promise);
+  inflight.set(key,{fingerprint,promise});
   return promise;
 }
