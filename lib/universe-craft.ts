@@ -24,7 +24,8 @@ export type UniverseSnapshot = {
 };
 
 export class UniverseCraftError extends Error {
-  constructor(message:string,public readonly code:string){super(message);this.name='UniverseCraftError'}
+  readonly code:string;
+  constructor(message:string,code:string){super(message);this.name='UniverseCraftError';this.code=code;}
 }
 
 /** Aceita ambas as variantes da API Connections: /link/ e /links/. */
@@ -155,7 +156,7 @@ export async function readUniverseCraft(
     }
   }
   for(const key of ['models','decks','notes'] as const){
-    if(counts[key]!==null&&counts[key]!<UNIVERSE_BASELINE[key])
+    if(counts[key]!==null&&(counts[key] as number)<UNIVERSE_BASELINE[key])
       snapshot.issues.push('A Collection '+key+' tem menos itens do que o inventário de referência.');
   }
   if(counts.cards!==null&&counts.cards<UNIVERSE_BASELINE.cards)
