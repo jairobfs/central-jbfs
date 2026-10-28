@@ -1,0 +1,51 @@
+name: Universo JBFS · prévia visual compilável
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/universe.tsx'
+      - 'app/universe.css'
+      - 'lib/universe-craft.ts'
+      - 'preview/**'
+      - 'vite.universe.config.ts'
+      - '.github/workflows/universe-live-preview.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/universe.tsx'
+      - 'app/universe.css'
+      - 'lib/universe-craft.ts'
+      - 'preview/**'
+      - 'vite.universe.config.ts'
+      - '.github/workflows/universe-live-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  preview:
+    name: Compilar a mesma UI do Universo
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obter repositório
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preparar Node.js e pnpm
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+      - name: Conferir tipos e contratos
+        run: |
+          pnpm exec tsc --noEmit --incremental false
+          node --experimental-strip-types --test tests/universe-craft.mjs tests/universe-fsrs.mjs
+      - name: Compilar visualização com fontes originais
+        run: pnpm exec vite build --config vite.universe.config.ts
+      - name: Validar arquivos publicados
+        run: |
+          test -s dist-preview/index.html
+          test -n "$(find dist-preview/assets -name '*.js' -print -quit)"
+          test -n "$(find dist-preview/assets -name '*.css' -print -quit)"
