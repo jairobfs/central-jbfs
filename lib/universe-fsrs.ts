@@ -69,7 +69,8 @@ function validState(value:unknown):value is FsrsState {
     typeof value.difficulty==='number'&&Number.isFinite(value.difficulty)&&value.difficulty>=0;
 }
 export function validateReviewEvent(value:unknown):asserts value is FsrsReviewEvent {
-  if(!isRecord(value)||!VALID_ID.test(String(value.eventId??''))||!VALID_ID.test(String(value.cardId??''))||
+  if(!isRecord(value)||typeof value.eventId!=='string'||typeof value.cardId!=='string'||
+    !VALID_ID.test(value.eventId)||!VALID_ID.test(value.cardId)||
     typeof value.reviewedAt!=='string'||!isoDate(value.reviewedAt)||![1,2,3,4].includes(value.rating as number)||
     value.source!=='universo-jbfs'||!isRecord(value.scheduler)||value.scheduler.name!=='FSRS'||
     typeof value.scheduler.version!=='string'||value.scheduler.version.trim().length===0||
