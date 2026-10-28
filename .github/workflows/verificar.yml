@@ -37,7 +37,7 @@ jobs:
         run: node tests/route-integration.mjs
 
       - name: Verificar contrato Craft do Universo sem gravações
-        run: node --experimental-strip-types --test tests/universe-craft.mjs
+        run: node --experimental-strip-types --test tests/universe-craft.mjs tests/universe-fsrs.mjs
 
       - name: Validar busca, calendário e biblioteca
         run: |

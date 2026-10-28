@@ -6,6 +6,8 @@ on:
     paths:
       - 'lib/universe-craft.ts'
       - 'tests/universe-craft.mjs'
+      - 'lib/universe-fsrs.ts'
+      - 'tests/universe-fsrs.mjs'
       - '.github/workflows/universe-contract.yml'
   workflow_dispatch:
 
@@ -25,4 +27,4 @@ jobs:
         with:
           node-version: '24'
       - name: Executar testes isolados (sem credenciais)
-        run: node --experimental-strip-types --test tests/universe-craft.mjs
+        run: node --experimental-strip-types --test tests/universe-craft.mjs tests/universe-fsrs.mjs
