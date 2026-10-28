@@ -53,6 +53,8 @@ test('validates real FSRS computed state and rejects placeholders',()=>{
  assert.doesNotThrow(()=>validateReviewEvent(valid()));
  for(const mutate of [
    x=>delete x.eventId,
+   x=>x.eventId=123,
+   x=>x.cardId=123,
    x=>x.source='not-fsrs',
    x=>x.rating=0,
    x=>x.scheduler.version='',
