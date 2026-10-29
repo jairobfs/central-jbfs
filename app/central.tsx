@@ -146,8 +146,8 @@ export default function Central({hosting='sites'}:{hosting?:'sites'|'render'}){
     }
     if(part.complete===true){
      if(part.hasMore||part.nextCursor)throw Error('A API forneceu indicador de conclusão inválido.');
-     const document={format:'central-jbfs-d1-export-v1',exportedAt:new Date().toISOString(),asOf,source:'central-jbfs:d1:entries',count:all.length,truncated:false,entries:all};
-     const file=new Blob([JSON.stringify(document,null,2)],{type:'application/json'});
+     const snapshot={format:'central-jbfs-d1-export-v1',exportedAt:new Date().toISOString(),asOf,source:'central-jbfs:d1:entries',count:all.length,truncated:false,entries:all};
+     const file=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
      const url=URL.createObjectURL(file),a=document.createElement('a');
      a.href=url;a.download='central-jbfs-export-'+new Date().toISOString().slice(0,10)+'.json';
      document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
