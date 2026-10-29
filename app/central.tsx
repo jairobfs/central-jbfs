@@ -139,7 +139,7 @@ export default function Central({hosting='sites'}:{hosting?:'sites'|'render'|'un
     if(!response.ok)throw Error('A exportação não foi confirmada (HTTP '+response.status+').');
     const part=await response.json() as {entries?:Entry[];asOf?:string;nextCursor?:string|null;hasMore?:boolean;complete?:boolean;source?:string;totalExpected?:number};
     if(!Array.isArray(part.entries)||part.source!=='central-jbfs:d1:entries'||!part.asOf||
-       !Number.isSafeInteger(part.totalExpected)||part.totalExpected<0||
+       typeof part.totalExpected!=='number'||!Number.isSafeInteger(part.totalExpected)||part.totalExpected<0||
        (asOf&&part.asOf!==asOf)||(expectedCount!==null&&part.totalExpected!==expectedCount))
        throw Error('A exportação recebeu páginas inconsistentes ou o acervo mudou durante a leitura.');
     expectedCount=part.totalExpected;
