@@ -44,3 +44,10 @@ Este é o início técnico da migração; o aplicativo final único ainda não f
 - O código exporta todos os campos de cada linha D1 (inclusive `owner_id` no arquivo local de backup autenticado). O conversor `lib/unification-migration.mjs` remove `owner_id` do payload enviado à Collection Craft. O arquivo não deve ser compartilhado publicamente.
 - **A API e o botão só poderão ser usados na Central publicada após deploy específico; a branch GitHub não implanta a versão Sites automaticamente.**
 - O próximo passo exigirá acesso autorizado à publicação original para executar o export, comparar a integridade e migrar o acervo inteiro de uma vez, com corte incremental.
+
+## Camada de persistência Craft (implementada em código; não publicada)
+- \`lib/craft-central-gateway.mjs\`: transporte da API oficial para a Collection real da Central; planeja, relê a revisão remota antes de gravar e verifica criação/atualização após escrever. A API Craft não fornece comparação e troca (CAS) atômica: o backend final deve serializar gravações por chave ou proteger concorrência com lock.
+- \`lib/central-craft-repository.mjs\`: leitura/listagem, criação e edição de registros com Craft como fonte principal, sem D1. O reenvio após resposta perdida identifica operações já concluídas e evita duplicar revisões. Excluir/arquivar registro da Central via UI permanece pendente.
+- \`scripts/sync-central-to-craft.mjs\`: ferramenta de transição usando a exportação privada. Modo padrão somente análise; \`--apply\` exige autorização explícita, aborta em conflitos e confirma a releitura.
+- Testes \`tests/craft-central-gateway.mjs\` e \`tests/central-craft-repository.mjs\`: integração com servidor simulado, falhas de rede, conflito de revisão, idempotência e histórico de questão. A API real Craft já foi testada manualmente com registros sintéticos, mas este adaptador em particular ainda não foi executado com uma URL autenticada real.
+- **A migração não foi executada**; as três sessões vistas no banco Sites em consulta anterior não substituem exportação completa/atual. O projeto original Universo continua separado do código deste branch.
