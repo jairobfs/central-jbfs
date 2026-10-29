@@ -36,3 +36,11 @@
 ## Observação operacional
 Um levantamento prévio do D1 revelou três registros de sessão, mas esse resultado não representa um backup atual. Nenhuma exportação privada é incluída aqui.
 Este é o início técnico da migração; o aplicativo final único ainda não foi publicado.
+
+## Exportação íntegra da Central (implementada no código, não publicada)
+- Endpoint `GET /api/entries/export?limit=250` autentica pelo mesmo contexto do Sites e devolve páginas de até 250 registros do proprietário, com `asOf`, `nextCursor`, `hasMore` e `complete`.
+- A paginação é por chave composta de `updated_at` e `id`, com limite temporal `asOf`. É um recorte temporal, não uma transação de snapshot do D1; alterações durante a exportação exigem uma passagem de reconciliação posterior.
+- A Central ganhou o botão **Exportar dados** na faixa de conexão, disponível apenas em sessão autenticada. Valida os IDs, impede duplicatas e gera JSON privado somente após receber a última página; a interface informa erros sem emitir arquivo parcial.
+- O código exporta todos os campos de cada linha D1 (inclusive `owner_id` no arquivo local de backup autenticado). O conversor `lib/unification-migration.mjs` remove `owner_id` do payload enviado à Collection Craft. O arquivo não deve ser compartilhado publicamente.
+- **A API e o botão só poderão ser usados na Central publicada após deploy específico; a branch GitHub não implanta a versão Sites automaticamente.**
+- O próximo passo exigirá acesso autorizado à publicação original para executar o export, comparar a integridade e migrar o acervo inteiro de uma vez, com corte incremental.
