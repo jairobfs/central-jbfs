@@ -48,7 +48,7 @@ jobs:
           node tests/app-runtime.mjs
 
       - name: Testar contrato da migração D1 para o Craft
-        run: node --test tests/unification-migration.mjs tests/craft-central-gateway.mjs tests/central-craft-repository.mjs
+        run: node --test tests/unification-migration.mjs tests/craft-central-gateway.mjs tests/central-craft-repository.mjs tests/central-craft-entries-transport.mjs
 
       - name: Gerar build portável
         run: pnpm build
