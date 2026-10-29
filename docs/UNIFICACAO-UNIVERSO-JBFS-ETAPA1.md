@@ -19,10 +19,10 @@
 - scripts/plan-central-to-craft.mjs: leitura de JSON local e emissão de resumo sem conteúdo pessoal; arquivo de plano opcional é exclusivo (flag wx) com permissão 0600.
 - tests/unification-migration.mjs: testes sem acesso à rede ou bancos reais.
 
-## Collection de destino PROPOSTA, ainda não criada
-- Título: Universo JBFS · Registros da Central; campo do nome: registro.
+## Collection de destino criada e validada
+- Collection real: Registros · Central JBFS, ID c2d21455-7247-c96f-0800-167ae049c385, no documento original do Universo; campo de nome: registro.
 - Colunas de texto: chave, tipo, conteudojson, revisao, atualizado, origem.
-- Manter o JSON integral, inclusive tentativas de questões e sessões, sujeito a validar limites da API Craft. Não truncar registros; conteúdo muito grande exige documento vinculado.
+- Teste real sintético concluído: criação → releitura → atualização de conteúdo/revisão/tentativa → releitura → limpeza. A Collection está vazia após o teste. Manter JSON integral, inclusive tentativas de questões e sessões. Validar limites para registros grandes; nunca truncar.
 
 ## Portões obrigatórios antes de escrita
 1. Exportar D1 completo por meio autenticado e registrar integridade/contagem/hash fora de repositório público. Exportar inventário atual de Collections Craft.
