@@ -1,10 +1,22 @@
 import type {Entry} from './types';
 export type EntriesResult={error?:string;signIn?:string;entries?:Entry[];entry?:Entry;truncated?:boolean;deleted?:boolean};
+export type EntriesTransport=(method:string,payload?:unknown)=>Promise<EntriesResult>;
+let craftTransport:EntriesTransport|null=null;
+/**
+ * Deve ser configurado antes de montar os componentes da Central no Universo.
+ * A troca D1 → Craft só é permitida após conferência integral de migração.
+ */
+export function configureEntriesTransport(transport:EntriesTransport,{cutoverVerified=false}:{cutoverVerified?:boolean}={}){
+ if(cutoverVerified!==true)throw new Error('Migração D1 → Craft não homologada. Transporte não ativado.');
+ if(typeof transport!=='function')throw new TypeError('Transporte inválido.');
+ craftTransport=transport;
+}
 export class EntriesError extends Error {
  status:number;signIn:string;
  constructor(message:string,status=0,signIn=''){super(message);this.name='EntriesError';this.status=status;this.signIn=signIn}
 }
 export async function requestEntries(method='GET',payload?:unknown,fetcher:typeof fetch=fetch,timeoutMs=15000):Promise<EntriesResult>{
+ if(craftTransport)return craftTransport(method,payload);
  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{
   const response=await fetcher('/api/entries',{method,cache:'no-store',signal:controller.signal,...(payload===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})});
