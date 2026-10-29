@@ -59,6 +59,15 @@ jobs:
       - name: Validar saída ESM incorporável
         run: test -s dist-universe-module/central-module.js
 
+      - name: Guardar módulo importável no projeto original
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: universo-central-module-${{ github.sha }}
+          path: dist-universe-module/
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Guardar build verificado para migração independente
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
