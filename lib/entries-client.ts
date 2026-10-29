@@ -9,7 +9,9 @@ let craftTransport:EntriesTransport|null=null;
 export function configureEntriesTransport(transport:EntriesTransport,{cutoverVerified=false}:{cutoverVerified?:boolean}={}){
  if(cutoverVerified!==true)throw new Error('Migração D1 → Craft não homologada. Transporte não ativado.');
  if(typeof transport!=='function')throw new TypeError('Transporte inválido.');
+ const previous=craftTransport;
  craftTransport=transport;
+ return ()=>{if(craftTransport===transport)craftTransport=previous};
 }
 export class EntriesError extends Error {
  status:number;signIn:string;
