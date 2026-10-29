@@ -18,22 +18,17 @@ O projeto original do Universo deve possuir uma rota interna dedicada (p. ex. `/
 import {mountCentralModule} from '/modules/central/central-module.js';
 const root=document.getElementById('central-root');
 const detach=mountCentralModule(root,{
-  migrationVerified:true, // Somente depois da auditoria completa D1 versus Craft
-  transport: async (method,payload)=>{
-    // Injetar adaptador autorizado do backend do Universo que responde ao
-    // contrato requestEntries; não declarar endpoints fictícios nem token no código.
-    return authorizedUniverseTransport(method,payload);
-  }
+  migrationVerified:true // Somente depois da auditoria completa D1 versus Craft
 });
 // Na saída da rota: detach()
 ```
 
-**Atenção:** `authorizedUniverseTransport` é o adaptador real a ser fornecido pelo Universo, não uma função já implementada neste pacote. Ele deve resolver autenticação no servidor, utilizar a Collection Craft `c2d21455-7247-c96f-0800-167ae049c385`, validar leitura/escrita e limitar o acesso ao proprietário. Não expor URL bearer `connect.craft.do/link/...` em scripts públicos.
+**Atenção:** o transporte do navegador já chama `/api/central/entries` na mesma origem (e `/restore` para restauração). O handler correspondente precisa ser instalado no backend do Universo conforme `integrations/SECURITY.md`, com autenticação real, lock distribuído, credencial Craft mantida no servidor e cutover validado. Não expor URL bearer `connect.craft.do/link/...` em scripts públicos.
 
 ## Dados e integridade
 
 - O código conserva os componentes React originais: agenda, planejamento, oficina, promptoteca, biblioteca, simulados e modo foco.
-- O transporte é injetado **antes** de renderizar; sem homologação da migração, `mountCentralModule` recusa montagem.
+- O transporte é configurado **antes** de renderizar e automaticamente desfeito na desmontagem; sem homologação da migração, `mountCentralModule` recusa montagem.
 - O contrato no Craft inclui GET/POST/PATCH e arquivamento reversível de DELETE; RESTORE pode ser incorporado a uma interface de lixeira.
 - IDs, campos, alternativas, tentativas de simulados e revisões são mantidos no documento JSON versionado.
 - A exclusão é lógica (`deletedAt`), com incremento da revisão e possibilidade de restauração; migração D1 não sobrescreve registros do Craft mais novos.
