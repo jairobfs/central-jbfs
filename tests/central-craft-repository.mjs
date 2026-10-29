@@ -57,3 +57,22 @@ test('registro inexistente não pode ser atualizado',async()=>{
  const f=fixture();
  await assert.rejects(f.repo.update({...draft,revision:1}),e=>e.code==='NOT_FOUND');
 });
+
+test('retry de criação com outro horário não duplica registro',async()=>{
+ const f=fixture();
+ await f.repo.create(draft);
+ const alternate=new CentralCraftRepository({gateway:f.gateway,clock:()=> '2026-10-30T00:00:00.000Z'});
+ const duplicate=await alternate.create(draft);
+ assert.equal(duplicate.id,uid);
+ assert.equal(f.rows.length,1);
+ assert.equal(f.requests.filter(x=>x==='POST').length,1);
+});
+test('retry de edição já confirmada não gera outra revisão',async()=>{
+ const f=fixture();
+ const original=await f.repo.create(draft);
+ const changed={...original,body:'Texto revisado'};
+ await f.repo.update(changed);
+ const second=await f.repo.update(changed);
+ assert.equal(second.revision,2);
+ assert.equal(f.requests.filter(x=>x==='PUT').length,1);
+});
