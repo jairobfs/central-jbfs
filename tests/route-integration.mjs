@@ -43,5 +43,40 @@ await test('Quiz attempt, counters and source survive handler update',async()=>{
 await test('A key outside the option list is rejected',async()=>assert.equal((await request('POST',{...quiz,id:randomUUID(),data:{...quiz.data,correctOption:7}})).status,400));
 await test('A contradictory attempt result is rejected',async()=>assert.equal((await request('POST',{...quiz,id:randomUUID(),data:{...quiz.data,quizAttempts:[{id:randomUUID(),at:'2026-10-23T12:00:00Z',selectedIndex:0,expectedIndex:2,correct:true,questionKey:'12345678'}]}})).status,400));
 await test('Quiz totals cannot contain more correct answers than attempts',async()=>assert.equal((await request('POST',{...quiz,id:randomUUID(),data:{...quiz.data,quizTotal:1,quizCorrect:2}})).status,400));
+const exportRoute=load(path.join(root,'app/api/entries/export/route.ts'));
+async function readExport(query='',identity=owner){
+ actor=identity?{userId:identity,email:'qa@example.test',displayName:'Synthetic QA',fullName:null}:null;
+ const result=await exportRoute.GET(new Request(base+'/api/entries/export'+query));
+ return {status:result.status,body:await result.json()};
+}
+await test('Export endpoint rejects anonymous access',async()=>assert.equal((await readExport('',null)).status,401));
+await test('Export endpoint rejects invalid limits and cursors',async()=>{
+ assert.equal((await readExport('?limit=9999')).status,400);
+ assert.equal((await readExport('?cursor=not-valid')).status,400);
+});
+await test('Export is complete with stable cursor pagination and user isolation',async()=>{
+ const rows=[];let cursor=null,firstAsOf=null;let pages=0;
+ while(true){
+  const query='?limit=2'+(cursor?'&cursor='+encodeURIComponent(cursor):'');
+  const response=await readExport(query);
+  assert.equal(response.status,200,JSON.stringify(response.body));
+  assert.ok(response.body.entries.length<=2);
+  assert.equal(response.body.source,'central-jbfs:d1:entries');
+  if(firstAsOf)assert.equal(response.body.asOf,firstAsOf);else firstAsOf=response.body.asOf;
+  rows.push(...response.body.entries);
+  pages++;
+  if(response.body.complete){assert.equal(response.body.nextCursor,null);break}
+  assert.equal(response.body.hasMore,true);
+  cursor=response.body.nextCursor;
+  assert.ok(cursor&&pages<20);
+ }
+ const normal=await request('GET');
+ assert.deepEqual(rows.map(r=>r.id).sort(),normal.body.entries.map(r=>r.id).sort());
+ assert.equal(new Set(rows.map(r=>r.id)).size,rows.length);
+ assert.ok(pages>1);
+ const otherView=await readExport('?limit=2',other);
+ assert.equal(otherView.status,200);
+ assert.deepEqual(otherView.body.entries,[]);
+});
 await test('Only expected revision may delete a record',async()=>{assert.equal((await request('DELETE',{id:q.id,revision:1})).status,409);assert.equal((await request('DELETE',{id:q.id,revision:2})).status,200);assert.equal((await request('DELETE',{id:note.id,revision:1})).status,200);assert.equal((await request('DELETE',{id:calendarTask.id,revision:1})).status,200);assert.equal((await request('DELETE',{id:quiz.id,revision:quizRevision})).status,200);assert.equal((await request('GET')).body.entries.length,0)});
 fs.mkdirSync('outputs',{recursive:true});fs.writeFileSync('outputs/route-integration-results.json',JSON.stringify({environment:'Actual route handlers + Drizzle + in-memory SQLite D1 compatibility fixture; identity context mocked',passed:checks.length,checks},null,2));console.log(JSON.stringify({passed:checks.length,total:checks.length}));
