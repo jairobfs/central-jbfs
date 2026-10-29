@@ -76,3 +76,34 @@ test('retry de edição já confirmada não gera outra revisão',async()=>{
  assert.equal(second.revision,2);
  assert.equal(f.requests.filter(x=>x==='PUT').length,1);
 });
+
+test('archiving keeps the full record and hides it from active list',async()=>{
+ const f=fixture();
+ const created=await f.repo.create(draft);
+ assert.equal(await f.repo.archive({id:uid,revision:created.revision}),true);
+ assert.equal((await f.repo.list()).length,0);
+ assert.equal(await f.repo.get(uid),null);
+ assert.equal(f.rows.length,1);
+ const archived=JSON.parse(f.rows[0].properties.conteudojson);
+ assert.equal(archived.deletedAt,now);
+ assert.deepEqual(archived.data,created.data);
+ assert.equal(archived.revision,2);
+ await assert.rejects(f.repo.update({...created,title:'bad'}),e=>e.code==='ARCHIVED');
+});
+test('archival retry is idempotent, and restore is versioned',async()=>{
+ const f=fixture(),created=await f.repo.create(draft);
+ await f.repo.archive({id:uid,revision:1});
+ const writes=f.requests.filter(x=>x==='PUT').length;
+ await f.repo.archive({id:uid,revision:1});
+ assert.equal(f.requests.filter(x=>x==='PUT').length,writes);
+ const restored=await f.repo.restore({id:uid,revision:2});
+ assert.equal(restored.revision,3);
+ assert.equal(restored.deletedAt,undefined);
+ assert.equal((await f.repo.list()).length,1);
+ assert.deepEqual(restored.data,created.data);
+});
+test('archiving with stale revision is blocked',async()=>{
+ const f=fixture(),created=await f.repo.create(draft);
+ await f.repo.update({...created,body:'2'});
+ await assert.rejects(f.repo.archive({id:uid,revision:1}),e=>e.code==='CONFLICT');
+});
