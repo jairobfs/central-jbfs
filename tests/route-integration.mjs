@@ -78,5 +78,31 @@ await test('Export is complete with stable cursor pagination and user isolation'
  assert.equal(otherView.status,200);
  assert.deepEqual(otherView.body.entries,[]);
 });
+await test('Export confirms the same total count on every page',async()=>{
+ const r=await readExport('?limit=2');
+ assert.equal(r.status,200);
+ assert.ok(Number.isInteger(r.body.totalExpected));
+ assert.ok(r.body.totalExpected>=r.body.entries.length);
+ if(r.body.nextCursor){
+  const next=await readExport('?limit=2&cursor='+encodeURIComponent(r.body.nextCursor));
+  assert.equal(next.status,200);
+  assert.equal(next.body.totalExpected,r.body.totalExpected);
+ }
+});
+await test('Concurrent edit that removes a row from snapshot fails closed',async()=>{
+ const first=await readExport('?limit=1');
+ assert.equal(first.status,200);
+ assert.ok(first.body.hasMore);
+ const lastId=sqlite.prepare('SELECT id FROM entries ORDER BY updated_at DESC, id DESC LIMIT 1').get().id;
+ const old=sqlite.prepare('SELECT updated_at FROM entries WHERE id=?').get(lastId).updated_at;
+ try{
+  sqlite.prepare('UPDATE entries SET updated_at=? WHERE id=?').run('2099-01-01T00:00:00.000Z',lastId);
+  const second=await readExport('?limit=1&cursor='+encodeURIComponent(first.body.nextCursor));
+  assert.equal(second.status,409);
+  assert.equal(second.body.code,'SNAPSHOT_CHANGED');
+ }finally{
+  sqlite.prepare('UPDATE entries SET updated_at=? WHERE id=?').run(old,lastId);
+ }
+});
 await test('Only expected revision may delete a record',async()=>{assert.equal((await request('DELETE',{id:q.id,revision:1})).status,409);assert.equal((await request('DELETE',{id:q.id,revision:2})).status,200);assert.equal((await request('DELETE',{id:note.id,revision:1})).status,200);assert.equal((await request('DELETE',{id:calendarTask.id,revision:1})).status,200);assert.equal((await request('DELETE',{id:quiz.id,revision:quizRevision})).status,200);assert.equal((await request('GET')).body.entries.length,0)});
 fs.mkdirSync('outputs',{recursive:true});fs.writeFileSync('outputs/route-integration-results.json',JSON.stringify({environment:'Actual route handlers + Drizzle + in-memory SQLite D1 compatibility fixture; identity context mocked',passed:checks.length,checks},null,2));console.log(JSON.stringify({passed:checks.length,total:checks.length}));

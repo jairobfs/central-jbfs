@@ -132,20 +132,25 @@ export default function Central({hosting='sites'}:{hosting?:'sites'|'render'|'un
   setExporting(true);
   try{
    const all:Entry[]=[],seen=new Set<string>();
-   let cursor:string|null=null,asOf:string|null=null;
+   let cursor:string|null=null,asOf:string|null=null,expectedCount:number|null=null;
    for(let page=0;page<200;page++){
     const endpoint='/api/entries/export?limit=250'+(cursor?'&cursor='+encodeURIComponent(cursor):'');
     const response=await fetch(endpoint,{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
     if(!response.ok)throw Error('A exportação não foi confirmada (HTTP '+response.status+').');
-    const part=await response.json() as {entries?:Entry[];asOf?:string;nextCursor?:string|null;hasMore?:boolean;complete?:boolean;source?:string};
-    if(!Array.isArray(part.entries)||part.source!=='central-jbfs:d1:entries'||!part.asOf||(asOf&&part.asOf!==asOf))throw Error('A exportação recebeu páginas inconsistentes.');
+    const part=await response.json() as {entries?:Entry[];asOf?:string;nextCursor?:string|null;hasMore?:boolean;complete?:boolean;source?:string;totalExpected?:number};
+    if(!Array.isArray(part.entries)||part.source!=='central-jbfs:d1:entries'||!part.asOf||
+       typeof part.totalExpected!=='number'||!Number.isSafeInteger(part.totalExpected)||part.totalExpected<0||
+       (asOf&&part.asOf!==asOf)||(expectedCount!==null&&part.totalExpected!==expectedCount))
+       throw Error('A exportação recebeu páginas inconsistentes ou o acervo mudou durante a leitura.');
+    expectedCount=part.totalExpected;
     asOf=part.asOf;
     for(const record of part.entries){
      if(!record.id||seen.has(record.id)||!Number.isInteger(record.revision))throw Error('Encontrado registro duplicado ou inválido.');
      seen.add(record.id);all.push(record);
     }
     if(part.complete===true){
-     if(part.hasMore||part.nextCursor)throw Error('A API forneceu indicador de conclusão inválido.');
+     if(part.hasMore||part.nextCursor||all.length!==expectedCount)
+      throw Error('A contagem final não confere com o acervo original. O arquivo foi bloqueado.');
      const snapshot={format:'central-jbfs-d1-export-v1',exportedAt:new Date().toISOString(),asOf,source:'central-jbfs:d1:entries',count:all.length,truncated:false,entries:all};
      const file=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
      const url=URL.createObjectURL(file),a=document.createElement('a');
