@@ -53,6 +53,12 @@ jobs:
       - name: Gerar build portável
         run: pnpm build
 
+      - name: Compilar módulo da Central para o Universo original
+        run: pnpm run build:universe-module
+
+      - name: Validar saída ESM incorporável
+        run: test -s dist-universe-module/central-module.js
+
       - name: Guardar build verificado para migração independente
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
